@@ -1,4 +1,3 @@
-../examples/
 command.o
 lex.yy.c
 lex.yy.o
