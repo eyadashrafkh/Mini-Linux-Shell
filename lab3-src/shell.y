@@ -44,15 +44,9 @@ commands:
 command: simple_command
         ;
 
-simple_command:	
-	command_and_args iomodifier_opt NEWLINE {
-		printf("   Yacc: Execute command\n");
-		Command::_currentCommand.execute();
-	}
-	| NEWLINE 
-	| error NEWLINE { yyerrok; }
-	| EXIT NEWLINE{
-		printf("\n\t\t\t Good Bye! :)\n\n");
+simple_command:
+	EXIT NEWLINE{
+		printf("\n\t\t\t<3 ;) Good Bye!! <3 ;)\n\n");
 		exit(0);
 	}
 	| command_and_args iomodifier_opt BACKGROUND NEWLINE {
@@ -61,10 +55,16 @@ simple_command:
 		printf("   Yacc: Execute command\n");
 		Command::_currentCommand.execute();
 	}
+	| command_and_args iomodifier_opt NEWLINE {
+		printf("   Yacc: Execute command\n");
+		Command::_currentCommand.execute();
+	}
 	| command_and_args iomodifier_opt PIPE commands {
 		printf("   Yacc: Execute command\n");
 		Command::_currentCommand.execute();
 	}
+	| NEWLINE 
+	| error NEWLINE { yyerrok; }
 	;
 
 command_and_args:
