@@ -13,7 +13,7 @@
 
 %token	<string_val> WORD
 
-%token 	NOTOKEN GREAT NEWLINE APPEND READ PIPE BACKGROUND EXIT ERR
+%token 	NOTOKEN GREAT NEWLINE APPEND READ PIPE BACKGROUND EXIT ERR WILDCARD
 
 %union	{
 		char   *string_val;
@@ -49,6 +49,14 @@ simple_command:
 		printf("\n\t\t\t<3 ;) Good Bye!! <3 ;)\n\n");
 		exit(0);
 	}
+	| command_and_args WILDCARD NEWLINE {
+		printf("   Yacc: insert wildcard = TRUE\n");
+		Command::_currentCommand._wildcard = 1;
+		printf("   Yacc: insert wildcard \"%s\"\n", $1);
+		Command::_currentSimpleCommand->insertArgument($1);
+		printf("   Yacc: Execute command\n");
+		Command::_currentCommand.execute();
+	}
 	| command_and_args iomodifier_opt BACKGROUND NEWLINE {
 		printf("   Yacc: insert background = TRUE\n");
 	 	Command::_currentCommand._background=1;
@@ -81,18 +89,18 @@ arg_list:
 
 argument:
 	WORD {
-               printf("   Yacc: insert argument \"%s\"\n", $1);
+           printf("   Yacc: insert argument \"%s\"\n", $1);
 
-	       Command::_currentSimpleCommand->insertArgument( $1 );\
+	       Command::_currentSimpleCommand->insertArgument( $1 );
 	}
+	
 	;
 
 command_word:
 	WORD {
-               printf("   Yacc: insert command \"%s\"\n", $1);
-	       
-	       Command::_currentSimpleCommand = new SimpleCommand();
-	       Command::_currentSimpleCommand->insertArgument( $1 );
+        printf("   Yacc: insert command \"%s\"\n", $1);  
+	    Command::_currentSimpleCommand = new SimpleCommand();
+	    Command::_currentSimpleCommand->insertArgument( $1 );
 	}
 	;
 
@@ -131,6 +139,8 @@ iomodifier_opt:
 	;
 
 %%
+
+
 
 void
 yyerror(const char * s)

@@ -21,7 +21,6 @@
 
 #include "command.h"
 
-
 /* Main Functions*/
 
 // Global variables
@@ -33,14 +32,16 @@ char *path_to_current_directory[128];
 // Child log file
 
 char LOG_FILE_NAME[] = "/child-log.txt";
-void openLogFile() {
+void openLogFile()
+{
 	char path_to_log[64];
 	strcpy(path_to_log, getenv("HOME"));
 	strcat(path_to_log, LOG_FILE_NAME);
 	fp = fopen(path_to_log, "a");
 }
 
-void closeLogFile() {
+void closeLogFile()
+{
 	fclose(fp);
 }
 
@@ -73,7 +74,6 @@ void removeNewline(char *str, int size)
 	}
 }
 
-
 // SIGINT handler to catch ctrl-c
 
 void handler_SIGINT(int sig_num)
@@ -85,7 +85,6 @@ void handler_SIGINT(int sig_num)
 	fflush(stdout);
 }
 
-
 // Change directory command
 
 int changeCurrentDirectory()
@@ -93,7 +92,7 @@ int changeCurrentDirectory()
 	// Return 0 if successful, -1 if not
 	int returnValue;
 
-	// Get the path after the command 'cd' 
+	// Get the path after the command 'cd'
 	// if none is given, go to home directory
 	char *path = Command::_currentSimpleCommand->_arguments[1];
 
@@ -122,34 +121,31 @@ void add_dir_to_path(char *dir)
 		path_to_current_directory[next_dir++] = strdup(dir);
 }
 
-
 /* End of Main Functions*/
-
-
 
 SimpleCommand::SimpleCommand()
 {
 	// Creat available space for 5 arguments
 	_numberOfAvailableArguments = 5;
 	_numberOfArguments = 0;
-	_arguments = (char **) malloc( _numberOfAvailableArguments * sizeof( char * ) );
+	_arguments = (char **)malloc(_numberOfAvailableArguments * sizeof(char *));
 }
 
-void
-SimpleCommand::insertArgument( char * argument )
+void SimpleCommand::insertArgument(char *argument)
 {
-	if ( _numberOfAvailableArguments == _numberOfArguments  + 1 ) {
+	if (_numberOfAvailableArguments == _numberOfArguments + 1)
+	{
 		// Double the available space
 		_numberOfAvailableArguments *= 2;
-		_arguments = (char **) realloc( _arguments,
-				  _numberOfAvailableArguments * sizeof( char * ) );
+		_arguments = (char **)realloc(_arguments,
+									  _numberOfAvailableArguments * sizeof(char *));
 	}
-	
-	_arguments[ _numberOfArguments ] = argument;
+
+	_arguments[_numberOfArguments] = argument;
 
 	// Add NULL argument at the end
-	_arguments[ _numberOfArguments + 1] = NULL;
-	
+	_arguments[_numberOfArguments + 1] = NULL;
+
 	_numberOfArguments++;
 }
 
@@ -158,50 +154,55 @@ Command::Command()
 	// Create available space for one simple command
 	_numberOfAvailableSimpleCommands = 1;
 	_simpleCommands = (SimpleCommand **)
-		malloc( _numberOfSimpleCommands * sizeof( SimpleCommand * ) );
+		malloc(_numberOfSimpleCommands * sizeof(SimpleCommand *));
 
 	_numberOfSimpleCommands = 0;
 	_outFile = 0;
 	_inputFile = 0;
 	_errFile = 0;
 	_background = 0;
+	_wildcard = 0;
 }
 
-void
-Command::insertSimpleCommand( SimpleCommand * simpleCommand )
+void Command::insertSimpleCommand(SimpleCommand *simpleCommand)
 {
-	if ( _numberOfAvailableSimpleCommands == _numberOfSimpleCommands ) {
+	if (_numberOfAvailableSimpleCommands == _numberOfSimpleCommands)
+	{
 		_numberOfAvailableSimpleCommands *= 2;
-		_simpleCommands = (SimpleCommand **) realloc( _simpleCommands,
-			 _numberOfAvailableSimpleCommands * sizeof( SimpleCommand * ) );
+		_simpleCommands = (SimpleCommand **)realloc(_simpleCommands,
+													_numberOfAvailableSimpleCommands * sizeof(SimpleCommand *));
 	}
-	
-	_simpleCommands[ _numberOfSimpleCommands ] = simpleCommand;
+
+	_simpleCommands[_numberOfSimpleCommands] = simpleCommand;
 	_numberOfSimpleCommands++;
 }
 
-void
-Command:: clear()
+void Command::clear()
 {
-	for ( int i = 0; i < _numberOfSimpleCommands; i++ ) {
-		for ( int j = 0; j < _simpleCommands[ i ]->_numberOfArguments; j ++ ) {
-			free ( _simpleCommands[ i ]->_arguments[ j ] );
+	for (int i = 0; i < _numberOfSimpleCommands; i++)
+	{
+		for (int j = 0; j < _simpleCommands[i]->_numberOfArguments; j++)
+		{
+			free(_simpleCommands[i]->_arguments[j]);
 		}
-		
-		free ( _simpleCommands[ i ]->_arguments );
-		free ( _simpleCommands[ i ] );
+
+		free(_simpleCommands[i]->_arguments);
+		free(_simpleCommands[i]);
 	}
 
-	if ( _outFile ) {
-		free( _outFile );
+	if (_outFile)
+	{
+		free(_outFile);
 	}
 
-	if ( _inputFile ) {
-		free( _inputFile );
+	if (_inputFile)
+	{
+		free(_inputFile);
 	}
 
-	if ( _errFile ) {
-		free( _errFile );
+	if (_errFile)
+	{
+		free(_errFile);
 	}
 
 	_numberOfSimpleCommands = 0;
@@ -210,78 +211,83 @@ Command:: clear()
 	_inputFile = 0;
 	_errFile = 0;
 	_background = 0;
+	_wildcard = 0;
 }
 
-void
-Command::print()
+void Command::print()
 {
 	printf("\n\n");
 	printf("              COMMAND TABLE                \n");
 	printf("\n");
 	printf("  #   Simple Commands\n");
 	printf("  --- ----------------------------------------------------------\n");
-	
-	for ( int i = 0; i < _numberOfSimpleCommands; i++ ) {
-		printf("  %-3d ", i );
-		for ( int j = 0; j < _simpleCommands[i]->_numberOfArguments; j++ ) {
-			printf("\"%s\" \t", _simpleCommands[i]->_arguments[ j ] );
+
+	for (int i = 0; i < _numberOfSimpleCommands; i++)
+	{
+		printf("  %-3d ", i);
+		for (int j = 0; j < _simpleCommands[i]->_numberOfArguments; j++)
+		{
+			printf("\"%s\" \t", _simpleCommands[i]->_arguments[j]);
 		}
 	}
 
-	printf( "\n\n" );
-	printf( "  Output       Input        Error        Background\n" );
-	printf( "  ------------ ------------ ------------ ------------\n" );
-	printf( "  %-12s %-12s %-12s %-12s\n", _outFile?_outFile:"default",
-		_inputFile?_inputFile:"default", _errFile?_errFile:"default",
-		_background?"YES":"NO");
-	printf( "\n\n" );
-	
+	printf("\n\n");
+	printf("  Output       Input        Error        Background\n");
+	printf("  ------------ ------------ ------------ ------------\n");
+	printf("  %-12s %-12s %-12s %-12s\n", _outFile ? _outFile : "default",
+		   _inputFile ? _inputFile : "default", _errFile ? _errFile : "default",
+		   _background ? "YES" : "NO");
+	printf("\n\n");
 }
 
-void
-Command::execute()
+void Command::execute()
 {
 	// Don't do anything if there are no simple commands
-	if ( _numberOfSimpleCommands == 0 ) {
+	if (_numberOfSimpleCommands == 0)
+	{
 		prompt();
 		return;
 	}
 
-	int defaultin = dup( 0 );
-	int defaultout = dup( 1 );
-	int defaulterr = dup( 2 );
+	int defaultin = dup(0);
+	int defaultout = dup(1);
+	int defaulterr = dup(2);
 
 	int inp, outp, err;
 
-	//if command has error file
-	if (_errFile) {
+	// if command has error file
+	if (_errFile)
+	{
 		err = open(_errFile, O_WRONLY | O_CREAT, 0777);
 		dup2(err, 2);
 	}
-	//if command has input file
-	if (_inputFile) {
+	// if command has input file
+	if (_inputFile)
+	{
 		inp = open(_inputFile, O_RDONLY, 0777);
 	}
-	//if command has output file
-	if (_outFile) {
+	// if command has output file
+	if (_outFile)
+	{
 		if (!_append)
 			outp = open(_outFile, O_WRONLY | O_CREAT, 0777);
 		else
 			outp = open(_outFile, O_WRONLY | O_APPEND, 0777);
 	}
 
-	// Create file descriptor 
+	// Create file descriptor
 	int outfd[_numberOfSimpleCommands][2];
 
 	// loop through all nested commands
-	for (int i = 0; i < _numberOfSimpleCommands; i++){
-		
-		// Create new pipe 
-		// Conceptually, a pipe is a connection between two processes, 
+	for (int i = 0; i < _numberOfSimpleCommands; i++)
+	{
+
+		// Create new pipe
+		// Conceptually, a pipe is a connection between two processes,
 		// such that the standard output from one process becomes the standard input of the other process.
-		// so if a process writes to outfd[1] process be can read from fdpipe[0] 
+		// so if a process writes to outfd[1] process be can read from fdpipe[0]
 		pipe(outfd[i]);
-		
+
 		// Changing directory
 		if (strcmp(_simpleCommands[i]->_arguments[0], "cd") == 0)
 		{
@@ -300,10 +306,11 @@ Command::execute()
 		// For every simple command fork a new process
 		// Setup i/o redirection
 		// and call exec
-		
+
 		// first command
-		if (i == 0){
-			// Redirect input 
+		if (i == 0)
+		{
+			// Redirect input
 			if (_inputFile)
 			{
 				dup2(inp, 0);
@@ -312,36 +319,61 @@ Command::execute()
 			else
 				dup2(defaultin, 0);
 		}
-		else {
+		else
+		{
 			dup2(outfd[i - 1][0], 0);
 			close(outfd[i - 1][0]);
 		}
-		if (i == _numberOfSimpleCommands -1){
+		if (i == _numberOfSimpleCommands - 1)
+		{
 			// Redirect output
 			if (_outFile)
 				dup2(outp, 1);
-			else 
+			else
 				dup2(defaultout, 1);
 		}
-		else {
+		else
+		{
 			dup2(outfd[i][1], 1);
 			close(outfd[i][1]);
 		}
 
-		// Create new process 
+		// Create new process
 		int pid = fork();
-		if (pid == -1) {
+		if (pid == -1)
+		{
 			printf("%s: fork\n", _simpleCommands[i]->_arguments[0]);
 			perror("");
 			exit(2);
 		}
 
-		if (pid == 0) {
+		if (pid == 0)
+		{
 			// Child
+			if (_wildcard)
+			{
+				printf("Inside wildcard code\n");
+				char *command;
+				command = (char *)malloc(100 * sizeof(char));
+				strcpy(command, _simpleCommands[i]->_arguments[0]);
+				for (int j = 1; j < _simpleCommands[i]->_numberOfArguments; j++)
+				{
+					strcat(command, " ");
+					strcat(command, _simpleCommands[i]->_arguments[j]);
+					system(command);
+					printf("%d command:%s\n",i,command);
+					exit(0);
+				}
+			}
 			// You can use execvp() instead if the arguments are stored in an array
-			execvp(_simpleCommands[i]->_arguments[0], &_simpleCommands[i]->_arguments[0]);
+			else
+				execvp(_simpleCommands[i]->_arguments[0], &_simpleCommands[i]->_arguments[0]);
+				// blow up if child doesn't suicide
+				perror("execvp");
+				exit(1);
 		}
-		else{
+		else
+		{
 			// Parent
 			signal(SIGCHLD, handleSIGCHLD);
 			// Restore input and output
@@ -355,15 +387,14 @@ Command::execute()
 
 	// Clear to prepare for next command
 	clear();
-	
+
 	// Print new prompt
 	prompt();
 }
 
 // Shell implementation
 
-void
-Command::prompt()
+void Command::prompt()
 {
 	signal(SIGINT, handler_SIGINT);
 	printf("myshell>");
@@ -375,17 +406,14 @@ Command::prompt()
 }
 
 Command Command::_currentCommand;
-SimpleCommand * Command::_currentSimpleCommand;
+SimpleCommand *Command::_currentSimpleCommand;
 
 int yyparse(void);
 
-
-int 
-main()
+int main()
 {
 	chdir(home_dir);
 	Command::_currentCommand.prompt();
 	yyparse();
 	return 0;
 }
-

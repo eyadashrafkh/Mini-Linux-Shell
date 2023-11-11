@@ -47,6 +47,11 @@
 "|"		{
 		return PIPE;
 		}
+
+"*" 	{
+		return WILDCARD;
+		}
+
 "exit"	{
 		return EXIT;
 		}

@@ -9,7 +9,7 @@ void handler_SIGINT(int);
 void handleSIGCHLD(int);
 int changeCurrentDirectory(void);
 void add_dir_to_path(char *);
-void removeNewline(char*, int);
+void removeNewline(char *, int);
 void openLogFile();
 void closeLogFile();
 
@@ -24,6 +24,7 @@ struct SimpleCommand
 	char **_arguments;
 
 	SimpleCommand();
+	//void wildcard(char* s);
 	void insertArgument(char *argument);
 };
 
@@ -37,6 +38,7 @@ struct Command
 	char *_errFile;
 	int _background;
 	int _append;
+	int _wildcard;
 
 	void prompt();
 	void print();
