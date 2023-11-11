@@ -22,6 +22,111 @@
 #include "command.h"
 
 
+/* Main Functions*/
+
+// Global variables
+FILE *fp;
+int next_dir = 0;
+char *home_dir = getenv("HOME");
+char *path_to_current_directory[128];
+
+// Child log file
+
+char LOG_FILE_NAME[] = "/child-log.txt";
+void openLogFile() {
+	char path_to_log[64];
+	strcpy(path_to_log, getenv("HOME"));
+	strcat(path_to_log, LOG_FILE_NAME);
+	fp = fopen(path_to_log, "a");
+}
+
+void closeLogFile() {
+	fclose(fp);
+}
+
+void handleSIGCHLD(int sig_num)
+{
+	int status;
+	wait(&status);
+	openLogFile();
+	flockfile(fp);
+	time_t TIMER = time(NULL);
+	tm *ptm = localtime((&TIMER));
+	char currentTime[32];
+	strcpy(currentTime, asctime(ptm));
+	removeNewline(currentTime, 32);
+	fprintf(fp, "%s: Child Terminated\n", currentTime);
+	funlockfile(fp);
+	fclose(fp);
+	signal(SIGCHLD, handleSIGCHLD);
+}
+
+void removeNewline(char *str, int size)
+{
+	for (int i = 0; i < size; i++)
+	{
+		if (str[i] == '\n')
+		{
+			str[i] = '\0';
+			return;
+		}
+	}
+}
+
+
+// SIGINT handler to catch ctrl-c
+
+void handler_SIGINT(int sig_num)
+{
+	signal(SIGINT, handler_SIGINT);
+	Command::_currentCommand.clear();
+	printf("\r\033[0J"); // Erase myshell> ^C
+	Command::_currentCommand.prompt();
+	fflush(stdout);
+}
+
+
+// Change directory command
+
+int changeCurrentDirectory()
+{
+	// Return 0 if successful, -1 if not
+	int returnValue;
+
+	// Get the path after the command 'cd' 
+	// if none is given, go to home directory
+	char *path = Command::_currentSimpleCommand->_arguments[1];
+
+	if (path)
+		returnValue = chdir(path);
+	else
+		returnValue = chdir(home_dir);
+
+	if (returnValue == 0 || !path)
+		add_dir_to_path(path);
+
+	Command::_currentCommand.clear();
+	return returnValue;
+}
+
+void add_dir_to_path(char *dir)
+{
+	if (dir == NULL)
+		next_dir = 0;
+	else if (strcmp(dir, "..") == 0 || strcmp(dir, ".") == 0)
+	{
+		if (next_dir > 0)
+			next_dir--;
+	}
+	else
+		path_to_current_directory[next_dir++] = strdup(dir);
+}
+
+
+/* End of Main Functions*/
+
+
+
 SimpleCommand::SimpleCommand()
 {
 	// Creat available space for 5 arguments
@@ -274,108 +379,6 @@ SimpleCommand * Command::_currentSimpleCommand;
 
 int yyparse(void);
 
-/* Main Functions*/
-
-// Global variables
-FILE *fp;
-int next_dir = 0;
-char *home_dir = getenv("HOME");
-char *path_to_current_directory[128];
-
-// Child log file
-
-char LOG_FILE_NAME[] = "/child-log.txt";
-void openLogFile() {
-	char path_to_log[64];
-	strcpy(path_to_log, getenv("HOME"));
-	strcat(path_to_log, LOG_FILE_NAME);
-	fp = fopen(path_to_log, "a");
-}
-
-void closeLogFile() {
-	fclose(fp);
-}
-
-void handleSIGCHLD(int sig_num)
-{
-	int status;
-	wait(&status);
-	openLogFile();
-	flockfile(fp);
-	time_t TIMER = time(NULL);
-	tm *ptm = localtime((&TIMER));
-	char currentTime[32];
-	strcpy(currentTime, asctime(ptm));
-	removeNewline(currentTime, 32);
-	fprintf(fp, "%s: Child Terminated\n", currentTime);
-	funlockfile(fp);
-	fclose(fp);
-	signal(SIGCHLD, handleSIGCHLD);
-}
-
-void removeNewline(char *str, int size)
-{
-	for (int i = 0; i < size; i++)
-	{
-		if (str[i] == '\n')
-		{
-			str[i] = '\0';
-			return;
-		}
-	}
-}
-
-
-// SIGINT handler to catch ctrl-c
-
-void handler_SIGINT(int sig_num)
-{
-	signal(SIGINT, handler_SIGINT);
-	Command::_currentCommand.clear();
-	printf("\r\033[0J"); // Erase myshell> ^C
-	Command::_currentCommand.prompt();
-	fflush(stdout);
-}
-
-
-// Change directory command
-
-int changeCurrentDirectory()
-{
-	// Return 0 if successful, -1 if not
-	int returnValue;
-
-	// Get the path after the command 'cd' 
-	// if none is given, go to home directory
-	char *path = Command::_currentSimpleCommand->_arguments[1];
-
-	if (path)
-		returnValue = chdir(path);
-	else
-		returnValue = chdir(home_dir);
-
-	if (returnValue == 0 || !path)
-		add_dir_to_path(path);
-
-	Command::_currentCommand.clear();
-	return returnValue;
-}
-
-void add_dir_to_path(char *dir)
-{
-	if (dir == NULL)
-		next_dir = 0;
-	else if (strcmp(dir, "..") == 0 || strcmp(dir, ".") == 0)
-	{
-		if (next_dir > 0)
-			next_dir--;
-	}
-	else
-		path_to_current_directory[next_dir++] = dir;
-}
-
-
-/* End of Main Functions*/
 
 int 
 main()
